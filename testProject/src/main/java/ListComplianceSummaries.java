@@ -1,5 +1,3 @@
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import java.io.IOException;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.regions.Region;
@@ -32,6 +30,7 @@ public class ListComplianceSummaries {
         String bucket = "bucket" + System.currentTimeMillis();
         String key = "Compliance Summary";
         String key2 = "Resource Compliance Summary";
+        
 //        ObjectMapper mapper = new ObjectMapper();
 //        String compSum = ssmClient.listComplianceSummaries().toString();
 //
@@ -39,29 +38,34 @@ public class ListComplianceSummaries {
 //                writeValueAsString(compSum);
 //        System.out.println(jsonString);
 
-        // String request = ssm.model.ListComplianceSummariesRequest();
-
+        // Creation of S3 Bucket
         s3Setup(s3, bucket, region);
 
         System.out.println("Uploading object...");
 
+        // Quick way of checking format of compliance summaries
         System.out.println(ssmClient.listComplianceSummaries());
 
+        // Place listComplianceSummaries string into S3 Bucket
         s3.putObject(PutObjectRequest.builder().bucket(bucket).key(key)
                         .build(),
                 RequestBody.fromString(ssmClient.listComplianceSummaries().toString()));
 
+        // Place listResourceComplianceSummaries into seperate bucket
         s3.putObject(PutObjectRequest.builder().bucket(bucket).key(key2)
                         .build(),
                 RequestBody.fromString(ssmClient.listResourceComplianceSummaries().toString()));
 
         System.out.println("Upload complete");
         System.out.printf("%n");
-
-        //cleanUp(s3, bucket, key);
+        
+        // Deletion of S3 bucket to minimise waste
+        cleanUp(s3, bucket, key);
 
         System.out.println("Closing the connection to {S3}");
+        // Close stream to ssmClient
         ssmClient.close();
+        // Close stream to S3
         s3.close();
         System.out.println("Connection closed");
         System.out.println("Exiting...");
@@ -109,9 +113,4 @@ public class ListComplianceSummaries {
         System.out.println("Cleanup complete");
         System.out.printf("%n");
     }
-
-//    public static void listCompliance(SsmClient ssmClient) {
-//
-//        System.out.println(ssmClient.listComplianceSummaries()+ "\n");
-//    }
 }
